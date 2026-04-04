@@ -1,40 +1,54 @@
-# SC-136 Tests
+# sc-136-tests
 
 Independent before/after testing for [laravel/serializable-closure PR #136](https://github.com/laravel/serializable-closure/pull/136).
 
-## PR Summary
+## What this tests
 
-**Title:** Fix same-line closure disambiguation via column-aware hashing
+PR #136 fixes a bug where multiple closures on the same source line with identical signatures all resolve to the first closure after a serialize/unserialize roundtrip.
 
-PR #136 fixes an issue where multiple closures defined on the same line would all resolve to the first closure when serialized and unserialized. The fix uses token column positions to disambiguate closures that share the same file and line.
+## Test coverage
 
-## Test Suite
+43 test cases across 13 categories:
 
-`tests/comprehensive.php` contains 44 test cases covering:
-
-- Arrow functions (same-line, typed, nullable, variadic, union types)
-- Traditional closures (with use, static, mixed)
-- Return type variations (arrays, null/bool, objects, closures)
-- Expression forms (ternary, null coalescing, match, instanceof)
-- Scaling (2, 3, 4, 5, and 10 same-line closures)
-- Serialization patterns (array, individual, WeakMap caching)
-- Known limitation: out-of-order serialization
-- Control cases (different lines, single closure)
+1. **Arrow functions** - 2, 3, 4, 5, and 10 closures on the same line
+2. **Static closures** - static arrow functions and static traditional closures
+3. **Traditional closures** - with use(), same use var, multiple use vars
+4. **Typed parameters** - int, nullable, union, variadic, multi-param, defaults
+5. **Return types** - string, nullable string
+6. **Return values** - mixed types, arrays, null/true/false, type casts
+7. **Expressions** - string ops, math, array ops, concatenation, ternary, null coalescing, match
+8. **Object operations** - instanceof, object creation
+9. **Higher-order** - closures returning closures
+10. **Mixed signatures** - PR #120 + #136 interplay
+11. **Constants** - closures referencing define'd constants
+12. **Controls** - different lines and single closure (should always work)
+13. **Serialization edge cases** - re-serialization, individual serialization, out-of-order (known limitation)
 
 ## Results
 
-### Before (2.x branch) - 4 pass, 39 fail
+### Before fix (2.x base branch)
 
-Most same-line closure tests fail because all closures resolve to the first one on the line.
+- **Passed: 4**
+- **Failed: 39**
+- Every same-line closure test fails. All closures resolve to the first one.
 
-### After (PR #136 branch) - 43 pass, 0 fail
+### After fix (PR #136 branch)
 
-All 43 numbered tests pass. The out-of-order serialization case (test 43) reports as XFAIL (expected failure / known limitation) and is not counted in the pass/fail totals.
+- **Passed: 43**
+- **Failed: 0**
+- All tests pass. The out-of-order serialization test correctly shows the known limitation (XFAIL, not counted as failure).
 
-### Package test suite
+### Pest test suite
 
-377 Pest tests pass on the PR branch with no regressions.
+- 377 passed, 1 skipped (unrelated), 0 failed
+- 873 assertions
+- No regressions
 
-## Known Limitation
+## Running
 
-**Out-of-order serialization** (test 43): If closures on the same line are serialized in a different order than they appear in source, disambiguation can assign incorrect column offsets. This is documented in the PR and is an inherent trade-off of the counter-based approach.
+```bash
+git clone https://github.com/JoshSalway/sc-136-tests.git
+cd sc-136-tests
+composer install
+php tests/comprehensive.php
+```
