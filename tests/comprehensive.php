@@ -232,7 +232,116 @@ $c = [fn () => TEST_CONST_A, fn () => TEST_CONST_B];
 test('referencing constants', $c, ['const-a', 'const-b']);
 
 // ============================================================================
-// SECTION 11: Controls (should always work, with or without fix)
+// SECTION 11: Multi-Line Parity (proving the bug is single-line only)
+// ============================================================================
+echo "\n--- Multi-Line Parity ---\n";
+
+// Parity for Section 1: arrow functions
+$pa = fn () => 'a';
+$pb = fn () => 'b';
+$pc = fn () => 'c';
+test('3 arrow functions on separate lines (parity)', [$pa, $pb, $pc], ['a', 'b', 'c']);
+
+$p2a = fn () => 'only-two-a';
+$p2b = fn () => 'only-two-b';
+test('2 arrow functions on separate lines (parity)', [$p2a, $p2b], ['only-two-a', 'only-two-b']);
+
+// Parity for Section 2: static closures
+$sa = static fn () => 'first';
+$sb = static fn () => 'second';
+$sc = static fn () => 'third';
+test('static arrow functions on separate lines (parity)', [$sa, $sb, $sc], ['first', 'second', 'third']);
+
+$sta = static function () { return 1; };
+$stb = static function () { return 2; };
+$stc = static function () { return 3; };
+test('static traditional closures on separate lines (parity)', [$sta, $stb, $stc], [1, 2, 3]);
+
+// Parity for Section 3: traditional closures
+$ta = function () { return 'x'; };
+$tb = function () { return 'y'; };
+$tc = function () { return 'z'; };
+test('traditional closures on separate lines (parity)', [$ta, $tb, $tc], ['x', 'y', 'z']);
+
+$va = 'alpha';
+$vb = 'beta';
+$tua = function () use ($va) { return $va; };
+$tub = function () use ($vb) { return $vb; };
+test('traditional closures with different use vars on separate lines (parity)', [$tua, $tub], ['alpha', 'beta']);
+
+// Parity for Section 4: typed params
+$tpa = fn (int $x) => $x * 2;
+$tpb = fn (int $x) => $x * 3;
+test('arrow functions with int params on separate lines (parity)', [$tpa, $tpb], [fn ($u) => $u(5) === 10, fn ($u) => $u(5) === 15]);
+
+$dfa = fn ($x = 10) => $x * 2;
+$dfb = fn ($x = 10) => $x * 3;
+test('arrow functions with default values on separate lines (parity)', [$dfa, $dfb], [fn ($u) => $u() === 20, fn ($u) => $u() === 30]);
+
+$rta = fn (): string => 'typed-a';
+$rtb = fn (): string => 'typed-b';
+test('arrow functions with return types on separate lines (parity)', [$rta, $rtb], ['typed-a', 'typed-b']);
+
+// Parity for Section 9: mixed signatures
+$mxa = fn () => 'arrow';
+$mxb = function () { return 'traditional'; };
+test('mixed arrow and traditional on separate lines (parity)', [$mxa, $mxb], ['arrow', 'traditional']);
+
+// ============================================================================
+// SECTION 12: Laravel Docs Real-World Examples
+// ============================================================================
+echo "\n--- Laravel Docs Real-World Examples ---\n";
+
+// Bus::chain() style - array of closures simulating job chains
+$chain = [fn () => 'process-payment', fn () => 'send-receipt', fn () => 'update-inventory'];
+test('Bus::chain() style job closures', $chain, ['process-payment', 'send-receipt', 'update-inventory']);
+
+// Collection::map() with serialized closures
+$mappers = [fn ($v) => $v * 2, fn ($v) => $v + 10, fn ($v) => $v ** 2];
+test('Collection::map() style closures', $mappers, [
+    fn ($u) => $u(5) === 10,
+    fn ($u) => $u(5) === 15,
+    fn ($u) => $u(5) === 25,
+]);
+
+// Queue closure style - dispatch(function() { ... })
+$jobs = [
+    function () { return 'job-1-result'; },
+    function () { return 'job-2-result'; },
+    function () { return 'job-3-result'; },
+];
+test('Queue dispatch style closures', $jobs, ['job-1-result', 'job-2-result', 'job-3-result']);
+
+// Event listener closures
+$listeners = [fn () => 'user.created handler', fn () => 'user.updated handler', fn () => 'user.deleted handler'];
+test('Event listener closures', $listeners, ['user.created handler', 'user.updated handler', 'user.deleted handler']);
+
+// Middleware-style closures (pipeline pattern)
+$middleware = [fn ($req) => "auth:$req", fn ($req) => "throttle:$req", fn ($req) => "verified:$req"];
+test('Middleware pipeline closures', $middleware, [
+    fn ($u) => $u('request') === 'auth:request',
+    fn ($u) => $u('request') === 'throttle:request',
+    fn ($u) => $u('request') === 'verified:request',
+]);
+
+// Validation rule closures
+$rules = [fn ($v) => strlen($v) >= 3, fn ($v) => strlen($v) <= 255, fn ($v) => ctype_alpha($v)];
+test('Validation rule closures', $rules, [
+    fn ($u) => $u('hello') === true,
+    fn ($u) => $u('hello') === true,
+    fn ($u) => $u('hello') === true,
+]);
+
+// Route closures (simulated)
+$routes = [fn () => 'home page', fn () => 'about page', fn () => 'contact page'];
+test('Route handler closures', $routes, ['home page', 'about page', 'contact page']);
+
+// Scheduler closures
+$scheduled = [fn () => 'backup-db', fn () => 'prune-stale', fn () => 'send-digest'];
+test('Scheduler task closures', $scheduled, ['backup-db', 'prune-stale', 'send-digest']);
+
+// ============================================================================
+// SECTION 13: Controls (should always work, with or without fix)
 // ============================================================================
 echo "\n--- Controls ---\n";
 
@@ -244,7 +353,7 @@ test('closures on different lines (control)', [$ca, $cb, $cc], ['line-a', 'line-
 test('single closure (control)', [fn () => 'solo'], ['solo']);
 
 // ============================================================================
-// SECTION 12: Serialization Edge Cases
+// SECTION 14: Serialization Edge Cases
 // ============================================================================
 echo "\n--- Serialization Edge Cases ---\n";
 
@@ -285,7 +394,7 @@ echo $ok ? "  PASS: different-line closures serialized individually\n" : "  FAIL
 if ($ok) { $pass++; } else { $fail++; $errors[] = 'different-line closures serialized individually'; }
 
 // ============================================================================
-// SECTION 13: Out-of-Order Serialization (Known Limitation)
+// SECTION 15: Out-of-Order Serialization (Known Limitation)
 // ============================================================================
 echo "\n--- Known Limitation: Out-of-Order Serialization ---\n";
 

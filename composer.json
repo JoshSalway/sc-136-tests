@@ -1,0 +1,12 @@
+{
+    "require": {
+        "laravel/serializable-closure": "dev-fix/closure-array-identity"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/JoshSalway/serializable-closure.git"
+        }
+    ],
+    "minimum-stability": "dev"
+}
